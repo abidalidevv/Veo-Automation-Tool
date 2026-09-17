@@ -1,0 +1,19 @@
+# Logs and temp files
+*.log
+*.tmp
+*.diff
+*.patch
+*diff*.txt
+*diff*.js
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace

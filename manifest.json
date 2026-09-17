@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Office VEO Automation",
+  "version": "1.1.8",
+  "author": "ABID Ali",
+  "homepage_url": "https://abidalidev.com",
+  "description": "100% Free! Auto videos & images on Google Flow (VEO3 ULTRA) via multithreading, auto-prompts, clone Vid/Audio & AI scripts",
+  "permissions": ["sidePanel", "activeTab", "storage", "unlimitedStorage", "downloads"],
+  "optional_permissions": ["debugger"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "assets/icon16.png",
+    "32": "assets/icon32.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
+  },
+  "action": {
+    "default_title": "Open Office VEO Automation",
+    "default_icon": {
+      "16": "assets/icon16.png",
+      "32": "assets/icon32.png",
+      "48": "assets/icon48.png",
+      "128": "assets/icon128.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["page-bridge.js"],
+      "world": "MAIN"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}

@@ -1,0 +1,1635 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="intro-screen" class="intro-screen hidden" role="dialog" aria-modal="true" style="display: none;">
+      <div class="intro-card">
+        <div class="intro-visual">
+          <span class="intro-orb intro-orb-a"></span>
+          <span class="intro-orb intro-orb-b"></span>
+          <span class="intro-orb intro-orb-c"></span>
+          <a class="intro-avatar-wrap" href="https://abidalidev.com" target="_blank" rel="noreferrer" aria-label="Visit abidalidev.com">
+            <img
+              class="intro-avatar"
+              src="./assets/avatar.jpg"
+              alt="Avatar ABID Ali"
+            />
+          </a>
+        </div>
+        <h2>Office VEO Automation</h2>
+        <p>
+          Quickly automate video, image, and prompt-cloning workflows on Google Flow.
+        </p>
+        <section class="intro-contact-panel" aria-labelledby="intro-contact-title">
+          <div class="intro-contact-heading">
+            <img class="intro-contact-logo intro-contact-photo" src="./assets/avatar.jpg" alt="ABID Ali" />
+            <span>
+              <h3 id="intro-contact-title">Developer &amp; Social Profiles</h3>
+              <small>Connect with ABID Ali</small>
+            </span>
+          </div>
+          <div class="intro-contact-grid">
+            <a class="intro-contact-item contact-website" href="https://abidalidev.com" target="_blank" rel="noreferrer">
+              <span class="intro-contact-icon" aria-hidden="true">🌐</span>
+              <span class="intro-contact-copy"><small>Website</small><strong>abidalidev.com</strong></span>
+              <span class="intro-contact-action" aria-hidden="true">↗</span>
+            </a>
+            <a class="intro-contact-item contact-author" href="https://linkedin.com/in/abidalidev" target="_blank" rel="noreferrer">
+              <span class="intro-contact-icon" aria-hidden="true">💼</span>
+              <span class="intro-contact-copy"><small>LinkedIn</small><strong>in/abidalidev</strong></span>
+              <span class="intro-contact-action" aria-hidden="true">↗</span>
+            </a>
+            <a class="intro-contact-item contact-telegram" href="https://x.com/abidalidevv" target="_blank" rel="noreferrer">
+              <span class="intro-contact-icon" aria-hidden="true">𝕏</span>
+              <span class="intro-contact-copy"><small>Twitter / X</small><strong>@abidalidevv</strong></span>
+              <span class="intro-contact-action" aria-hidden="true">↗</span>
+            </a>
+            <a class="intro-contact-item contact-support" href="https://www.instagram.com/abidalidevv" target="_blank" rel="noreferrer">
+              <span class="intro-contact-icon" aria-hidden="true">📷</span>
+              <span class="intro-contact-copy"><small>Instagram</small><strong>@abidalidevv</strong></span>
+              <span class="intro-contact-action" aria-hidden="true">↗</span>
+            </a>
+            <a class="intro-contact-item contact-zalo" href="https://www.facebook.com/abidalidevv" target="_blank" rel="noreferrer">
+              <span class="intro-contact-icon" aria-hidden="true">📘</span>
+              <span class="intro-contact-copy"><small>Facebook</small><strong>abidalidevv</strong></span>
+              <span class="intro-contact-action" aria-hidden="true">↗</span>
+            </a>
+            <a class="intro-contact-item contact-github" href="https://github.com/abidalidevv/Veo-Automation-Tool" target="_blank" rel="noreferrer">
+              <span class="intro-contact-icon" aria-hidden="true">🐙</span>
+              <span class="intro-contact-copy"><small>GitHub</small><strong>Veo-Automation-Tool</strong></span>
+              <span class="intro-contact-action" aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </section>
+      </div>
+      <button id="intro-enter-btn" class="intro-enter-btn">
+        <span class="intro-enter-label">Open main interface</span>
+        <span class="intro-enter-arrow" aria-hidden="true">→</span>
+      </button>
+    </div>
+
+    <!-- ====== NEW COMPACT HEADER ====== -->
+    <header class="main-header">
+      <button
+        class="back-arrow-btn"
+        id="back-to-intro-btn"
+        title="Developer Profiles"
+        aria-label="Developer Profiles"
+      >
+        <span class="back-arrow-icon" aria-hidden="true">◀</span>
+      </button>
+      <div class="header-center">
+        <div class="header-title-row">
+          <span class="header-title">VEO Automation - Google Flow</span>
+        </div>
+        <div class="header-author-row">
+          <span class="header-author-label">Developer:</span>
+          <a
+            class="header-author-link"
+            href="https://abidalidev.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >ABID Ali - abidalidev.com</a>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="guide-btn" id="guide-btn-open">✦ Guide</button>
+        <div class="header-lang-wrap">
+          <select class="lang-select header-lang-select">
+            <option value="en" selected>EN</option>
+            <option value="vi">VI</option>
+          </select>
+          <span class="lang-arrow">▼</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ====== USER GUIDE MODAL ====== -->
+    <div id="user-guide-modal" class="user-guide-modal hidden">
+      <div class="user-guide-backdrop" id="guide-backdrop"></div>
+      <div class="user-guide-dialog">
+        <div class="user-guide-header">
+          <span class="user-guide-title">User Guide</span>
+          <button class="user-guide-close" id="guide-btn-close" aria-label="Close">✕</button>
+        </div>
+        <div class="user-guide-body">
+          <div class="guide-content guide-content-en">
+            <section class="guide-section">
+              <h4>1. Prepare Google Flow</h4>
+              <ol>
+                <li>Open Google Flow and sign in to the Google account that can create videos or images.</li>
+                <li>Open or create a Flow project, then keep the Flow tab active beside this extension.</li>
+                <li>Choose a mode in Automation before entering prompts.</li>
+              </ol>
+            </section>
+            <section class="guide-section">
+              <h4>2. Choose the correct mode</h4>
+              <ul>
+                <li><strong>Text to Video:</strong> creates a video from each text prompt.</li>
+                <li><strong>Frame to Video:</strong> uses a first frame, or first and last frames, for each prompt.</li>
+                <li><strong>Ingredients to Video:</strong> attaches matching reference images to each video prompt.</li>
+                <li><strong>Text to Image:</strong> creates still images from text prompts.</li>
+                <li><strong>Ingredients to Image:</strong> creates images using uploaded references.</li>
+              </ul>
+            </section>
+            <section class="guide-section">
+              <h4>3. Add prompts and input images</h4>
+              <ol>
+                <li>Separate prompts with one blank line. Each block becomes one queue item.</li>
+                <li>For Frame or Ingredients modes, upload images before pressing Run.</li>
+                <li>Use image filenames that appear in the prompt when Auto-add character images is enabled.</li>
+                <li>Review the prompt preview to confirm the images assigned to every prompt.</li>
+              </ol>
+            </section>
+            <section class="guide-section">
+              <h4>4. Configure generation</h4>
+              <ul>
+                <li><strong>Concurrent Prompts:</strong> how many prompts are submitted in one batch. Start with 1 for stability.</li>
+                <li><strong>Random Delay:</strong> waiting time between prompts to reduce UI conflicts.</li>
+                <li><strong>Outputs per Prompt:</strong> choose 1 to 4 results for each prompt.</li>
+                <li><strong>Model, aspect ratio, and duration:</strong> configure them in Setting before running.</li>
+                <li><strong>Save to folder and Auto rename:</strong> organize downloaded results automatically.</li>
+              </ul>
+            </section>
+            <section class="guide-section">
+              <h4>5. Run the queue</h4>
+              <ol>
+                <li>Press <strong>Run</strong>. The tool selects the Flow mode, attaches images, enters the prompt, and submits it.</li>
+                <li>Keep the Flow tab open while the queue is running. Do not manually change its mode or composer.</li>
+                <li>Follow each item in Prompt Queue: preparing, attaching images, submitting, rendering, downloading, or completed.</li>
+              </ol>
+            </section>
+            <section class="guide-section">
+              <h4>6. Retry and failure handling</h4>
+              <ul>
+                <li>A retry is used only when the current render card explicitly shows <strong>Not successful</strong>.</li>
+                <li>Queued, preparing, or rendering cards are not retried.</li>
+                <li><strong>Max Retries on Failure</strong> controls the retry limit. Use a moderate value such as 3 to 5.</li>
+              </ul>
+            </section>
+            <section class="guide-section">
+              <h4>7. Downloads and Edge permission</h4>
+              <ul>
+                <li>Select automatic video/image quality in Setting. Higher resolutions may require the appropriate Google plan.</li>
+                <li>Files are saved under the browser Downloads folder and the selected project subfolder.</li>
+                <li><strong>Full auto Run</strong> requests optional debugger permission. If Edge refuses it, leave this option off and use the normal click flow.</li>
+                <li>Reload the extension and refresh Google Flow after installing a new extension version.</li>
+              </ul>
+            </section>
+          </div>
+
+          </div>
+      </div>
+    </div>
+    <div class="main-tabs">
+      <button class="main-tab active" data-target="control-tab">
+        ⎘ Automation
+      </button>
+      <button class="main-tab" data-target="create-prompt-tab">
+        ✨ Script Generator
+      </button>
+      <button class="main-tab" data-target="clone-video-tab">
+        🎬 Clone Video
+      </button>
+      <div class="tab-slider"></div>
+    </div>
+
+    <div id="control-tab" class="tab-content active">
+      <div class="control-top-wrapper">
+        <div class="control-top-left">
+          <div class="action-grid">
+            <button
+              class="action-btn"
+              data-mode="text-to-video"
+              data-note="Customize motion style, duration &amp; quantity in the Settings tab for more control."
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                ></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <path
+                  d="M10.42 12.61a2.1 2.1 0 1 1 2.97 2.97L7.95 21 4 22l.99-3.95 5.43-5.44Z"
+                ></path>
+              </svg>
+              Text to Video
+            </button>
+            <button
+              class="action-btn"
+              data-mode="frame-to-video"
+              data-note="Customize motion style, duration &amp; quantity in the Settings tab for more control."
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+              Frame to Video
+            </button>
+            <button
+              class="action-btn"
+              data-mode="ingredients-to-video"
+              data-note="Customize motion style, duration &amp; quantity in the Settings tab for more control."
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+              </svg>
+              Ingredients to Video
+            </button>
+            <button
+              class="action-btn active"
+              data-mode="text-to-image"
+              data-note="Customize aspect ratio, image model, and quantity in the Settings tab for more control."
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                ></polygon>
+              </svg>
+              Text to Image
+            </button>
+            <button
+              class="action-btn"
+              data-mode="ingredients-to-image"
+              data-note="Customize aspect ratio, image model, and quantity in the Settings tab for more control."
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+              </svg>
+              Ingredients to Image
+            </button>
+          </div>
+
+          <div class="config-grid-area">
+            <!-- text-to-video config -->
+            <div class="mode-config" data-mode-config="text-to-video">
+              <div class="grid-2">
+                <div class="card">
+                  <label>⚡ Concurrent Prompts</label>
+                  <div class="concurrent-dial-wrap">
+                    <div class="concurrent-numbers" data-concurrent-nums></div>
+                    <canvas
+                      class="concurrent-arc"
+                      width="72"
+                      height="90"
+                    ></canvas>
+                  </div>
+                  <small>Number of prompts to process simultaneously.</small>
+                </div>
+                <div class="card">
+                  <label>🕒 Random Delay</label>
+                  <div class="delay-wrapper">
+                    <div class="delay-inputs-row">
+                      <input
+                        class="delay-input"
+                        type="number"
+                        min="20"
+                        max="120"
+                        value="20"
+                      />
+                      <span class="delay-arrow">⇄</span>
+                      <input
+                        class="delay-input"
+                        type="number"
+                        min="20"
+                        max="120"
+                        value="30"
+                      />
+                    </div>
+                    <div class="slider-wrap">
+                      <div class="slider-track-bg"></div>
+                      <div class="slider-track-fill"></div>
+                      <input
+                        class="dual-range range-min"
+                        type="range"
+                        min="20"
+                        max="120"
+                        value="20"
+                        step="1"
+                      />
+                      <input
+                        class="dual-range range-max"
+                        type="range"
+                        min="20"
+                        max="120"
+                        value="30"
+                        step="1"
+                      />
+                    </div>
+                  </div>
+                  <small
+                    >Random wait time before handling the next prompt.</small
+                  >
+                </div>
+              </div>
+            </div>
+            <!-- frame-to-video config -->
+            <div class="mode-config" data-mode-config="frame-to-video">
+              <div class="grid-2">
+                <div class="card">
+                  <label>⚡ Concurrent Prompts</label>
+                  <div class="concurrent-dial-wrap">
+                    <div class="concurrent-numbers" data-concurrent-nums></div>
+                    <canvas
+                      class="concurrent-arc"
+                      width="72"
+                      height="90"
+                    ></canvas>
+                  </div>
+                  <small>Number of prompts to process simultaneously.</small>
+                </div>
+                <div class="card">
+                  <label>🕒 Random Delay</label>
+                  <div class="delay-wrapper">
+                    <div class="delay-inputs-row">
+                      <input
+                        class="delay-input"
+                        type="number"
+                        min="20"
+                        max="120"
+                        value="20"
+                      />
+                      <span class="delay-arrow">⇄</span>
+                      <input
+                        class="delay-input"
+                        type="number"
+                        min="20"
+                        max="120"
+                        value="30"
+                      />
+                    </div>
+                    <div class="slider-wrap">
+                      <div class="slider-track-bg"></div>
+                      <div class="slider-track-fill"></div>
+                      <input
+                        class="dual-range range-min"
+                        type="range"
+                        min="20"
+                        max="120"
+                        value="20"
+                        step="1"
+                      />
+                      <input
+                        class="dual-range range-max"
+                        type="range"
+                        min="20"
+                        max="120"
+                        value="30"
+                        step="1"
+                      />
+                    </div>
+                  </div>
+                  <small
+                    >Random wait time before handling the next prompt.</small
+                  >
+                </div>
+              </div>
+            </div>
+            <!-- ingredients-to-video config -->
+            <div class="mode-config" data-mode-config="ingredients-to-video">
+              <div class="grid-2">
+                <div class="card">
+                  <label>⚡ Concurrent Prompts</label>
+                  <div class="concurrent-dial-wrap">
+                    <div class="concurrent-numbers" data-concurrent-nums></div>
+                    <canvas
+                      class="concurrent-arc"
+                      width="72"
+                      height="90"
+                    ></canvas>
+                  </div>
+                  <small>Number of prompts to process simultaneously.</small>
+                </div>
+                <div class="card">
+                  <label>🕒 Random Delay</label>
+                  <div class="delay-wrapper">
+                    <div class="delay-inputs-row">
+                      <input
+                        class="delay-input"
+                        type="number"
+                        min="20"
+                        max="120"
+                        value="20"
+                      />
+                      <span class="delay-arrow">⇄</span>
+                      <input
+                        class="delay-input"
+                        type="number"
+                        min="20"
+                        max="120"
+                        value="30"
+                      />
+                    </div>
+                    <div class="slider-wrap">
+                      <div class="slider-track-bg"></div>
+                      <div class="slider-track-fill"></div>
+                      <input
+                        class="dual-range range-min"
+                        type="range"
+                        min="20"
+                        max="120"
+                        value="20"
+                        step="1"
+                      />
+                      <input
+                        class="dual-range range-max"
+                        type="range"
+                        min="20"
+                        max="120"
+                        value="30"
+                        step="1"
+                      />
+                    </div>
+                  </div>
+                  <small
+                    >Random wait time before handling the next prompt.</small
+                  >
+                </div>
+              </div>
+            </div>
+            <!-- text-to-image config -->
+            <div class="mode-config active" data-mode-config="text-to-image">
+              <div class="grid-2">
+                <div class="card">
+                  <label>⚡ Concurrent Prompts</label>
+                  <div class="concurrent-dial-wrap">
+                    <div
+                      class="concurrent-numbers"
+                      data-concurrent-nums
+                      data-default-val="1"
+                    ></div>
+                    <canvas
+                      class="concurrent-arc"
+                      width="72"
+                      height="90"
+                    ></canvas>
+                  </div>
+                  <small>Number of prompts to process simultaneously.</small>
+                </div>
+                <div class="card">
+                  <label>🕒 Random Delay</label>
+                  <div class="delay-wrapper">
+                    <div class="delay-inputs-row">
+                      <input
+                        class="delay-input"
+                        type="number"
+                        min="20"
+                        max="120"
+                        value="20"
+                      />
+                      <span class="delay-arrow">⇄</span>
+                      <input
+                        class="delay-input"
+                        type="number"
+                        min="20"
+                        max="120"
+                        value="30"
+                      />
+                    </div>
+                    <div class="slider-wrap">
+                      <div class="slider-track-bg"></div>
+                      <div class="slider-track-fill"></div>
+                      <input
+                        class="dual-range range-min"
+                        type="range"
+                        min="20"
+                        max="120"
+                        value="20"
+                        step="1"
+                      />
+                      <input
+                        class="dual-range range-max"
+                        type="range"
+                        min="20"
+                        max="120"
+                        value="30"
+                        step="1"
+                      />
+                    </div>
+                  </div>
+                  <small
+                    >Random wait time before handling the next prompt.</small
+                  >
+                </div>
+              </div>
+            </div>
+            <!-- ingredients-to-image config -->
+            <div class="mode-config" data-mode-config="ingredients-to-image">
+              <div class="grid-2">
+                <div class="card">
+                  <label>⚡ Concurrent Prompts</label>
+                  <div class="concurrent-dial-wrap">
+                    <div class="concurrent-numbers" data-concurrent-nums></div>
+                    <canvas
+                      class="concurrent-arc"
+                      width="72"
+                      height="90"
+                    ></canvas>
+                  </div>
+                  <small>Number of prompts to process simultaneously.</small>
+                </div>
+                <div class="card">
+                  <label>🕒 Random Delay</label>
+                  <div class="delay-wrapper">
+                    <div class="delay-inputs-row">
+                      <input
+                        class="delay-input"
+                        type="number"
+                        min="20"
+                        max="120"
+                        value="20"
+                      />
+                      <span class="delay-arrow">⇄</span>
+                      <input
+                        class="delay-input"
+                        type="number"
+                        min="20"
+                        max="120"
+                        value="30"
+                      />
+                    </div>
+                    <div class="slider-wrap">
+                      <div class="slider-track-bg"></div>
+                      <div class="slider-track-fill"></div>
+                      <input
+                        class="dual-range range-min"
+                        type="range"
+                        min="20"
+                        max="120"
+                        value="20"
+                        step="1"
+                      />
+                      <input
+                        class="dual-range range-max"
+                        type="range"
+                        min="20"
+                        max="120"
+                        value="30"
+                        step="1"
+                      />
+                    </div>
+                  </div>
+                  <small
+                    >Random wait time before handling the next prompt.</small
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="setting-side-btn" data-target="setting-tab">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            width="18"
+            height="18"
+          >
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+            ></path>
+          </svg>
+          <span>Setting</span>
+        </button>
+      </div>
+
+      <!-- TEXT TO VIDEO SECTION -->
+      <div id="text-to-video" class="mode-section">
+        <div class="card card-mb master-prompt-card">
+          <label>👑 Master Prompt (Optional - Character Consistency)</label>
+          <textarea
+            class="master-prompt-input"
+            id="master-prompt-text-to-video"
+            rows="2"
+            placeholder="e.g. 25-year-old girl with blonde ponytail, green eyes, red jacket, cinematic..."
+          ></textarea>
+          <small>Prepends to each prompt to ensure character and style consistency across all generated videos.</small>
+        </div>
+        <div class="card prompt-card">
+          <div class="card-header">
+            <label>📄 Prompts</label>
+            <button class="upload-btn">or upload .txt file ↥</button>
+          </div>
+          <textarea
+            rows="6"
+            placeholder="Example:&#10;First long prompt.&#10;It can span multiple lines.&#10;&#10;Second prompt starts after a blank line.&#10;&#10;Third prompt."
+          ></textarea>
+          <small>Separate each prompt with a blank line.</small>
+        </div>
+        <div
+          class="card review-card"
+          style="display: none; margin-bottom: 15px"
+        >
+          <label style="display: flex; align-items: center; gap: 8px"
+            ><svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline></svg
+            >Video Mode per Prompt</label
+          >
+          <div
+            class="review-list"
+            style="
+              margin-top: 10px;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            "
+          ></div>
+          <small style="margin-top: 10px; display: block"
+            >Choose "8s" for 8-second video or "Concat" to combine with next
+            prompt into 1 video.</small
+          >
+        </div>
+        <!-- OUTPUT DIAL + SAVE -->
+        <div class="grid-output-save">
+          <div class="card output-dial-card">
+            <label>🗎 Outputs per Prompt</label>
+            <div class="output-dial-inner">
+              <div class="output-dial-wrap">
+                <canvas
+                  class="output-dial-canvas"
+                  width="130"
+                  height="130"
+                ></canvas>
+                <div class="output-dial-num">1</div>
+              </div>
+              <div class="output-dial-btns">
+                <div class="dial-btn-row">
+                  <button class="dial-btn output-val-btn" data-val="1">1</button
+                  ><button class="dial-btn output-val-btn" data-val="2">
+                    2
+                  </button>
+                </div>
+                <div class="dial-btn-row">
+                  <button class="dial-btn output-val-btn" data-val="4">4</button
+                  ><button class="dial-btn output-val-btn" data-val="3">
+                    3
+                  </button>
+                </div>
+              </div>
+            </div>
+            <select class="output-dial-select" style="display: none">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div class="save-toggle-col">
+            <div class="card save-folder-card">
+              <label>📁 Save to folder</label>
+              <input
+                type="text"
+                id="save-to-folder-text-to-video"
+                value="veo-folder-1"
+              />
+              <small>Subfolder for downloaded files.</small>
+            </div>
+            <div class="auto-rename-card">
+              <div class="toggle-row-inline">
+                <span class="auto-rename-label">Auto rename</span>
+                <label class="switch"
+                  ><input type="checkbox" checked /><span
+                    class="slider round"
+                  ></span
+                ></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FRAME TO VIDEO SECTION -->
+      <div id="frame-to-video" class="mode-section">
+        <div class="upload-zone">
+          <div class="upload-icon">☁️</div>
+          <p><strong>Click to upload or drag &amp; drop</strong></p>
+          <small>PNG, JPG, GIF up to 10MB each</small>
+        </div>
+        <div class="card card-mb">
+          <label>🖼️ Image Processing Option</label>
+          <select>
+            <option value="first-frame" selected>
+              First frame image for each prompt
+            </option>
+            <option value="first-last-frame">
+              First and last frame images for each prompt
+            </option>
+          </select>
+        </div>
+        <div class="card card-mb master-prompt-card">
+          <label>👑 Master Prompt (Optional - Character Consistency)</label>
+          <textarea
+            class="master-prompt-input"
+            id="master-prompt-frame-to-video"
+            rows="2"
+            placeholder="e.g. 25-year-old girl with blonde ponytail, green eyes, red jacket, cinematic..."
+          ></textarea>
+          <small>Prepends to each prompt to ensure character and style consistency across all generated videos.</small>
+        </div>
+        <div class="card prompt-card">
+          <div class="card-header">
+            <label>📄 Prompts</label
+            ><button class="upload-btn">or upload .txt file ↥</button>
+          </div>
+          <textarea
+            rows="4"
+            placeholder="Example:&#10;First long prompt.&#10;It can span multiple lines.&#10;&#10;Second prompt starts after a blank line.&#10;&#10;Third prompt."
+          ></textarea>
+          <small
+            >Separate prompts with a blank line. Images will be processed with
+            each prompt based on quantity.</small
+          >
+        </div>
+        <div
+          class="card review-card"
+          style="display: none; margin-bottom: 15px"
+        >
+          <label style="display: flex; align-items: center; gap: 8px"
+            ><svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline></svg
+            >Video Mode per Prompt</label
+          >
+          <div
+            class="review-list"
+            style="
+              margin-top: 10px;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            "
+          ></div>
+          <small style="margin-top: 10px; display: block"
+            >Choose "8s" for 8-second video or "Concat" to combine with next
+            prompt into 1 video.</small
+          >
+        </div>
+        <div class="grid-output-save">
+          <div class="card output-dial-card">
+            <label>🗎 Outputs per Prompt</label>
+            <div class="output-dial-inner">
+              <div class="output-dial-wrap">
+                <canvas
+                  class="output-dial-canvas"
+                  width="130"
+                  height="130"
+                ></canvas>
+                <div class="output-dial-num">1</div>
+              </div>
+              <div class="output-dial-btns">
+                <div class="dial-btn-row">
+                  <button class="dial-btn output-val-btn" data-val="1">1</button
+                  ><button class="dial-btn output-val-btn" data-val="2">
+                    2
+                  </button>
+                </div>
+                <div class="dial-btn-row">
+                  <button class="dial-btn output-val-btn" data-val="4">4</button
+                  ><button class="dial-btn output-val-btn" data-val="3">
+                    3
+                  </button>
+                </div>
+              </div>
+            </div>
+            <select class="output-dial-select" style="display: none">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div class="save-toggle-col">
+            <div class="card save-folder-card">
+              <label>📁 Save to folder</label>
+              <input
+                type="text"
+                id="save-to-folder-frame-to-video"
+                value="veo-folder-1"
+              />
+              <small>Subfolder for downloaded files.</small>
+            </div>
+            <div class="auto-rename-card">
+              <div class="toggle-row-inline">
+                <span class="auto-rename-label">Auto rename</span>
+                <label class="switch"
+                  ><input type="checkbox" checked /><span
+                    class="slider round"
+                  ></span
+                ></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INGREDIENTS TO VIDEO SECTION -->
+      <div id="ingredients-to-video" class="mode-section">
+        <div class="upload-zone">
+          <div class="upload-icon">☁️</div>
+          <p><strong>Click to upload or drag &amp; drop</strong></p>
+          <small>PNG, JPG, GIF up to 10MB each</small>
+        </div>
+        <div class="card card-mb">
+          <label>🖼️ Max Input Images per Prompt</label>
+          <select>
+            <option value="1">1 image</option>
+            <option value="2">2 images</option>
+            <option value="3" selected>3 images</option>
+          </select>
+        </div>
+        <div class="card card-mb master-prompt-card">
+          <label>👑 Master Prompt (Optional - Character Consistency)</label>
+          <textarea
+            class="master-prompt-input"
+            id="master-prompt-ingredients-to-video"
+            rows="2"
+            placeholder="e.g. 25-year-old girl with blonde ponytail, green eyes, red jacket, cinematic..."
+          ></textarea>
+          <small>Prepends to each prompt to ensure character and style consistency across all generated videos.</small>
+        </div>
+        <div class="card prompt-card">
+          <div class="card-header">
+            <label>📄 Prompts</label
+            ><button class="upload-btn">or upload .txt file ↥</button>
+          </div>
+          <textarea
+            rows="4"
+            placeholder="Example:&#10;First long prompt.&#10;It can span multiple lines.&#10;&#10;Second prompt starts after a blank line.&#10;&#10;Third prompt."
+          ></textarea>
+          <small
+            >Separate prompts with a blank line. Images will be processed with
+            each prompt based on quantity.</small
+          >
+        </div>
+        <div class="card feature-toggle-card card-mb">
+          <div class="feature-icon">👤</div>
+          <div class="feature-text">
+            <strong>Auto-add character images</strong
+            ><small
+              >Automatically add images that match character names in prompts
+              (based on filename)</small
+            >
+          </div>
+          <label class="switch"
+            ><input type="checkbox" /><span class="slider round"></span
+          ></label>
+        </div>
+        <div
+          class="card review-card"
+          style="display: none; margin-bottom: 15px"
+        >
+          <label style="display: flex; align-items: center; gap: 8px"
+            ><svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline></svg
+            >Video Mode per Prompt</label
+          >
+          <div
+            class="review-list"
+            style="
+              margin-top: 10px;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            "
+          ></div>
+          <small style="margin-top: 10px; display: block"
+            >Choose "8s" for 8-second video or "Concat" to combine with next
+            prompt into 1 video.</small
+          >
+        </div>
+        <div class="grid-output-save">
+          <div class="card output-dial-card">
+            <label>🗎 Outputs per Prompt</label>
+            <div class="output-dial-inner">
+              <div class="output-dial-wrap">
+                <canvas
+                  class="output-dial-canvas"
+                  width="130"
+                  height="130"
+                ></canvas>
+                <div class="output-dial-num">1</div>
+              </div>
+              <div class="output-dial-btns">
+                <div class="dial-btn-row">
+                  <button class="dial-btn output-val-btn" data-val="1">1</button
+                  ><button class="dial-btn output-val-btn" data-val="2">
+                    2
+                  </button>
+                </div>
+                <div class="dial-btn-row">
+                  <button class="dial-btn output-val-btn" data-val="4">4</button
+                  ><button class="dial-btn output-val-btn" data-val="3">
+                    3
+                  </button>
+                </div>
+              </div>
+            </div>
+            <select class="output-dial-select" style="display: none">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div class="save-toggle-col">
+            <div class="card save-folder-card">
+              <label>📁 Save to folder</label>
+              <input
+                type="text"
+                id="save-to-folder-ingredients-to-video"
+                value="veo-folder-1"
+              />
+              <small>Subfolder for downloaded files.</small>
+            </div>
+            <div class="auto-rename-card">
+              <div class="toggle-row-inline">
+                <span class="auto-rename-label">Auto rename</span>
+                <label class="switch"
+                  ><input type="checkbox" checked /><span
+                    class="slider round"
+                  ></span
+                ></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TEXT TO IMAGE SECTION -->
+      <div id="text-to-image" class="mode-section active">
+        <div class="card card-mb master-prompt-card">
+          <label>👑 Master Prompt (Optional - Character Consistency)</label>
+          <textarea
+            class="master-prompt-input"
+            id="master-prompt-text-to-image"
+            rows="2"
+            placeholder="e.g. 25-year-old girl with blonde ponytail, green eyes, red jacket, cinematic lighting..."
+          ></textarea>
+          <small>Prepends to each prompt to ensure character and style consistency across all generated images.</small>
+        </div>
+        <div class="card prompt-card">
+          <div class="card-header">
+            <label>📄 Prompts</label
+            ><button class="upload-btn">or upload .txt file ↥</button>
+          </div>
+          <textarea
+            rows="6"
+            placeholder="Example:&#10;First prompt..."
+          ></textarea>
+          <small>Separate each prompt with a blank line.</small>
+        </div>
+        <div
+          class="card review-card"
+          style="display: none; margin-bottom: 15px"
+        >
+          <label style="display: flex; align-items: center; gap: 8px"
+            ><svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline></svg
+            >Image Mode per Prompt</label
+          >
+          <div
+            class="review-list"
+            style="
+              margin-top: 10px;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            "
+          ></div>
+          <small style="margin-top: 10px; display: block"
+            >Create new: each prompt uses its own uploaded images. Reuse: uses
+            the last generated image from the previous prompt as input.</small
+          >
+        </div>
+        <div class="grid-output-save">
+          <div class="card output-dial-card">
+            <label>🗎 Outputs per Prompt</label>
+            <div class="output-dial-inner">
+              <div class="output-dial-wrap">
+                <canvas
+                  class="output-dial-canvas"
+                  width="130"
+                  height="130"
+                ></canvas>
+                <div class="output-dial-num">1</div>
+              </div>
+              <div class="output-dial-btns">
+                <div class="dial-btn-row">
+                  <button class="dial-btn output-val-btn dial-btn-active" data-val="1">1</button
+                  ><button
+                    class="dial-btn output-val-btn"
+                    data-val="2"
+                  >
+                    2
+                  </button>
+                </div>
+                <div class="dial-btn-row">
+                  <button class="dial-btn output-val-btn" data-val="4">
+                    4</button
+                  ><button
+                    class="dial-btn output-val-btn"
+                    data-val="3"
+                  >
+                    3
+                  </button>
+                </div>
+              </div>
+            </div>
+            <select class="output-dial-select" style="display: none">
+              <option value="1" selected>1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+            <small>Outputs generated per prompt.</small>
+          </div>
+          <div class="save-toggle-col">
+            <div class="card save-folder-card">
+              <label>📁 Save to folder</label>
+              <input
+                type="text"
+                id="save-to-folder-text-to-image"
+                value="veo-folder-1"
+              />
+              <small>Subfolder for downloaded files.</small>
+            </div>
+            <div class="auto-rename-card">
+              <div class="toggle-row-inline">
+                <span class="auto-rename-label">Auto rename</span>
+                <label class="switch"
+                  ><input type="checkbox" checked /><span
+                    class="slider round"
+                  ></span
+                ></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INGREDIENTS TO IMAGE SECTION -->
+      <div id="ingredients-to-image" class="mode-section">
+        <div class="upload-zone">
+          <div class="upload-icon">☁️</div>
+          <p><strong>Click to upload or drag &amp; drop</strong></p>
+          <small>PNG, JPG, GIF up to 10MB each</small>
+        </div>
+        <div class="card card-mb">
+          <label>🖼️ Max Input Images per Prompt</label>
+          <select>
+            <option value="1">1 image</option>
+            <option value="2">2 images</option>
+            <option value="3" selected>3 images</option>
+          </select>
+        </div>
+        <div class="card card-mb master-prompt-card">
+          <label>👑 Master Prompt (Optional - Character Consistency)</label>
+          <textarea
+            class="master-prompt-input"
+            id="master-prompt-ingredients-to-image"
+            rows="2"
+            placeholder="e.g. 25-year-old girl with blonde ponytail, green eyes, red jacket, cinematic..."
+          ></textarea>
+          <small>Prepends to each prompt to ensure character and style consistency across all generated images.</small>
+        </div>
+        <div class="card prompt-card">
+          <div class="card-header">
+            <label>📄 Prompts</label
+            ><button class="upload-btn">or upload .txt file ↥</button>
+          </div>
+          <textarea
+            rows="4"
+            placeholder="Example:&#10;First long prompt.&#10;It can span multiple lines.&#10;&#10;Second prompt starts after a blank line.&#10;&#10;Third prompt."
+          ></textarea>
+          <small
+            >Separate prompts with a blank line. Images will be processed with
+            each prompt based on quantity.</small
+          >
+        </div>
+        <div class="card feature-toggle-card card-mb">
+          <div class="feature-icon">👤</div>
+          <div class="feature-text">
+            <strong>Auto-add character images</strong
+            ><small
+              >Automatically add images that match character names in prompts
+              (based on filename)</small
+            >
+          </div>
+          <label class="switch"
+            ><input type="checkbox" /><span class="slider round"></span
+          ></label>
+        </div>
+        <div
+          class="card review-card"
+          style="display: none; margin-bottom: 15px"
+        >
+          <label style="display: flex; align-items: center; gap: 8px"
+            ><svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline></svg
+            >Image Mode per Prompt</label
+          >
+          <div
+            class="review-list"
+            style="
+              margin-top: 10px;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            "
+          ></div>
+          <small style="margin-top: 10px; display: block"
+            >Create new: each prompt uses its own uploaded images. Reuse: uses
+            the last generated image as input.</small
+          >
+        </div>
+        <div class="grid-output-save">
+          <div class="card output-dial-card">
+            <label>🗎 Outputs per Prompt</label>
+            <div class="output-dial-inner">
+              <div class="output-dial-wrap">
+                <canvas
+                  class="output-dial-canvas"
+                  width="130"
+                  height="130"
+                ></canvas>
+                <div class="output-dial-num">1</div>
+              </div>
+              <div class="output-dial-btns">
+                <div class="dial-btn-row">
+                  <button class="dial-btn output-val-btn" data-val="1">1</button
+                  ><button class="dial-btn output-val-btn" data-val="2">
+                    2
+                  </button>
+                </div>
+                <div class="dial-btn-row">
+                  <button class="dial-btn output-val-btn" data-val="4">4</button
+                  ><button class="dial-btn output-val-btn" data-val="3">
+                    3
+                  </button>
+                </div>
+              </div>
+            </div>
+            <select class="output-dial-select" style="display: none">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div class="save-toggle-col">
+            <div class="card save-folder-card">
+              <label>📁 Save to folder</label>
+              <input
+                type="text"
+                id="save-to-folder-ingredients-to-image"
+                value="veo-folder-1"
+              />
+              <small>Subfolder for downloaded files.</small>
+            </div>
+            <div class="auto-rename-card">
+              <div class="toggle-row-inline">
+                <span class="auto-rename-label">Auto rename</span>
+                <label class="switch"
+                  ><input type="checkbox" checked /><span
+                    class="slider round"
+                  ></span
+                ></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note-text" id="dynamic-note">
+        Customize motion style, duration &amp; quantity in the Settings tab for
+        more control.
+      </div>
+
+      <!-- OLD toggle-row hidden (logic reads from auto-rename-card now via popup.js) -->
+      <div class="toggle-row" style="display: none">
+        <span>Auto change file name</span>
+        <label class="switch"
+          ><input type="checkbox" checked /><span class="slider round"></span
+        ></label>
+      </div>
+
+      <div class="card queue-card">
+        <div class="queue-header">
+          <span>☷ PROMPT QUEUE</span><span class="active-count">0 active</span>
+        </div>
+        <div class="queue-body"></div>
+        <div class="queue-footer">
+          <button class="btn-clear">↻ Clear</button>
+          <button class="btn-run">▷ Run</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTING TAB -->
+    <div id="setting-tab" class="tab-content">
+      <!-- <div class="card card-mb">
+        <label>🎚️ Default Mode</label
+        ><select id="default-mode-select">
+          <option value="text-to-video" selected>Text to Video</option>
+          <option value="frame-to-video">Frame to Video</option>
+          <option value="ingredients-to-video">Ingredients to Video</option>
+          <option value="text-to-image">Text to Image</option>
+          <option value="ingredients-to-image">
+            Ingredients to Image
+          </option></select
+        ><small>Default mode when creating new videos.</small>
+      </div> -->
+      <div class="grid-2">
+        <div class="card">
+          <label>⚙️ Video Model</label>
+          <select>
+            <option value="omni-flash">Omni Flash</option>
+            <option value="veo-3.1-lite">Veo 3.1 - Lite</option>
+            <option value="veo-3.1-fast" selected>Veo 3.1 - Fast</option>
+            <option value="veo-3.1-quality">Veo 3.1 - Quality</option>
+            <option value="veo-3.1-lite-lower">
+              Veo 3.1 - Lite [Lower Priority]
+            </option>
+            <option value="veo-3.1-fast-lower">
+              Veo 3.1 - Fast [Lower Priority]
+            </option>
+          </select>
+          <small>Select the video generation model to use.</small>
+        </div>
+
+        <div class="card">
+          <label>🖼️ Default Aspect Ratio</label>
+          <select>
+            <option value="16:9" selected>16:9 (YouTube)</option>
+            <option value="9:16">9:16 (Shorts/Reels)</option>
+          </select>
+          <small>Video frame ratio (16:9 or 9:16).</small>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <label>🍌 Image Model</label>
+          <select>
+            <option value="nano-banana-2" selected>Nano Banana 2</option>
+            <option value="nano-banana-pro">Nano Banana Pro</option>
+            <option value="imagen-4">Imagen 4</option>
+          </select>
+          <small>Select the AI model for images.</small>
+        </div>
+
+        <div class="card">
+          <label>🖼️ Image Aspect Ratio</label>
+          <select>
+            <option value="16:9" selected>16:9 (Landscape)</option>
+            <option value="4:3">4:3</option>
+            <option value="1:1">1:1 (Square)</option>
+            <option value="3:4">3:4</option>
+            <option value="9:16">9:16 (Portrait)</option>
+          </select>
+          <small>Image frame ratio options.</small>
+        </div>
+      </div>
+      <div class="card card-mb">
+        <label>↺ Max Retries on Failure</label>
+        <div class="number-input-group">
+          <button class="btn-minus">−</button
+          ><input
+            type="number"
+            id="max-retries"
+            value="5"
+            min="1"
+            max="20"
+          /><button class="btn-plus">+</button>
+        </div>
+        <small
+          >Number of times to retry video generation if it fails (1-20).</small
+        >
+      </div>
+      <div class="card card-mb">
+        <label>📥 Auto Download Quality (Video)</label
+        ><select id="auto-download-video-quality">
+          <option value="none">No Download</option>
+          <option value="270p">270p</option>
+          <option value="720p" selected>720p</option>
+          <option value="1080p">1080p (Ultra/Pro plan required)</option>
+          <option value="4k">4K (Ultra/Pro plan required)</option></select
+        ><small>Select the video quality for automatic downloads.</small>
+      </div>
+      <div class="card card-mb">
+        <label>📥 Auto Download Quality (Image)</label
+        ><select id="auto-download-image-quality">
+          <option value="none">No Download</option>
+          <option value="1k" selected>1k</option>
+          <option value="2k">2k</option>
+          <option value="4k">4k (Ultra plan required)</option></select
+        ><small>Select the image quality for automatic downloads.</small>
+      </div>
+      <div class="card card-mb">
+        <label>A文 Language</label
+        ><select class="lang-select"><option value="en" selected>English</option></select>
+          <label>Character Names</label>
+          <div
+            id="cp-character-names"
+            class="grid-2"
+            style="margin-bottom: 0"
+          ></div>
+        </div>
+        <div class="card card-mb">
+          <div style="margin-top: 0; display: flex; justify-content: flex-end">
+            <button class="btn-run" id="cp-generate-gemini-btn">
+              ✨ Generate Prompt
+            </button>
+          </div>
+          <textarea id="cp-output" style="display: none"></textarea>
+          <label for="cp-preview" style="margin-top: 10px"
+            >Gemini Prompt Preview</label
+          >
+          <textarea
+            id="cp-preview"
+            rows="9"
+            placeholder="When Gemini finishes generating, scene prompts appear here..."
+          ></textarea>
+          <small>Type custom text or select options from the dropdown list.</small>
+        </div>
+      </div>
+      <div id="cp-feature-idea" class="cp-feature-section">
+        <div class="card card-mb">
+          <label>💡 Input your story ideas & notes</label>
+          <textarea
+            id="cp-idea-input"
+            rows="5"
+            placeholder="e.g. A thrilling cinematic chase between a cat and dog through city rooftops"
+          ></textarea>
+          <div class="grid-2 cp-idea-options-row">
+            <div>
+              <label for="cp-idea-duration">Video Duration</label
+              ><input
+                id="cp-idea-duration"
+                type="text"
+                list="cp-idea-duration-list"
+                placeholder="e.g. 32s, 40s, 64s..."
+              /><datalist id="cp-idea-duration-list">
+                <option value="16s"></option>
+                <option value="24s"></option>
+                <option value="32s"></option>
+                <option value="40s"></option>
+                <option value="64s"></option>
+                <option value="1 min"></option>
+                <option value="2 min"></option>
+              </datalist>
+            </div>
+            <div>
+              <label for="cp-idea-style">Visual Style</label
+              ><input
+                id="cp-idea-style"
+                type="text"
+                list="cp-idea-style-list"
+                placeholder="e.g. cinematic, animated, energetic..."
+              /><datalist id="cp-idea-style-list">
+                <option value="Cinematic"></option>
+                <option value="Hyper-realistic"></option>
+                <option value="3D Animation"></option>
+                <option value="Anime"></option>
+                <option value="Fun 3D Animation"></option>
+                <option value="POV/Selfie"></option>
+                <option value="Vintage/Retro"></option>
+              </datalist>
+            </div>
+          </div>
+          <div class="cp-idea-actions">
+            <button class="btn-run" id="cp-idea-generate-btn">
+              ▷ Generate Prompt
+            </button>
+          </div>
+          <label for="cp-preview-idea" style="margin-top: 10px"
+            >👁️ Gemini Prompt Preview</label
+          >
+          <textarea
+            id="cp-preview-idea"
+            rows="9"
+            placeholder="When Gemini finishes generating, scene prompts appear here..."
+          ></textarea>
+          <small
+            >Gemini will generate structured JSON scenes (8 seconds per scene) following the schema.</small
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- CLONE VIDEO TAB -->
+    <div id="clone-video-tab" class="tab-content">
+      <div class="cv-feature-grid">
+        <button
+          class="cv-feature-btn active"
+          data-cv-feature="cv-audio-section"
+        >
+          🎵 Clone from Audio
+        </button>
+        <button class="cv-feature-btn" data-cv-feature="cv-video-section">
+          🎞️ Clone from Video
+        </button>
+      </div>
+      <div id="cv-audio-section" class="cv-feature-section active">
+        <div class="card card-mb cv-audio-box">
+          <label for="cv-audio-file">Audio Source (Upload or Drag & Drop)</label>
+          <div
+            id="cv-audio-upload-zone"
+            class="cv-upload-zone"
+            role="button"
+            tabindex="0"
+          >
+            <p>Drag audio file here or click to browse</p>
+            <small>Supported: .mp3, .wav, .m4a, .ogg</small>
+          </div>
+          <input id="cv-audio-file" type="file" accept="audio/*" hidden />
+          <div id="cv-audio-file-name" class="cv-upload-file-name">
+            No audio file selected
+          </div>
+        </div>
+        <div class="card card-mb cv-audio-box">
+          <label for="cv-audio-note">Adaptation Notes (Optional)</label
+          ><input
+            id="cv-audio-note"
+            type="text"
+            placeholder="e.g. Keep narrative pacing, adjust scene lighting to golden hour"
+          />
+        </div>
+        <div class="cv-actions">
+          <button
+            class="btn-run"
+            id="cv-run-audio-btn"
+            style="margin-bottom: 15px"
+          >
+            ▷ Start Audio Clone
+          </button>
+        </div>
+        <div class="card card-mb cv-audio-box">
+          <label for="cv-audio-prompt-preview">Audio Prompt Preview</label
+          ><textarea
+            id="cv-audio-prompt-preview"
+            rows="5"
+            placeholder="After uploading audio, the prompt preview will appear here..."
+            readonly
+          ></textarea>
+        </div>
+      </div>
+      <div id="cv-video-section" class="cv-feature-section">
+        <div class="card card-mb cv-video-box">
+          <label for="cv-video-file">Video Source (Upload or Drag & Drop)</label>
+          <div
+            id="cv-video-upload-zone"
+            class="cv-upload-zone"
+            role="button"
+            tabindex="0"
+          >
+            <p>Drag video file here or click to browse</p>
+            <small>Supported: MP4, MOV, WEBM...</small>
+          </div>
+          <input id="cv-video-file" type="file" accept="video/*" hidden />
+          <div id="cv-video-file-name" class="cv-upload-file-name">
+            No video file selected
+          </div>
+        </div>
+        <div class="card card-mb cv-video-box">
+          <label for="cv-video-note">Adaptation Notes (Optional)</label
+          ><input
+            id="cv-video-note"
+            type="text"
+            placeholder="e.g. Keep narrative pacing, adjust scene lighting to golden hour"
+          />
+        </div>
+        <div class="cv-actions">
+          <button
+            class="btn-run"
+            id="cv-run-video-btn"
+            style="margin-bottom: 15px"
+          >
+            ▷ Start Video Clone
+          </button>
+        </div>
+        <div class="card card-mb cv-video-box">
+          <label for="cv-video-prompt-preview" style="margin-top: 10px"
+            >Video Prompt Preview</label
+          ><textarea
+            id="cv-video-prompt-preview"
+            rows="5"
+            placeholder="After uploading video, the prompt preview will appear here..."
+            readonly
+          ></textarea>
+        </div>
+      </div>
+    </div>
+    <a
+      href="https://abidalidev.com"
+      target="_blank"
+      class="zalo-floating-btn"
+      title="Developer: ABID Ali (abidalidev.com)"
+      aria-label="Developer: ABID Ali"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="2" y1="12" x2="22" y2="12"></line>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      </svg>
+    </a>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
