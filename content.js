@@ -6,12 +6,14 @@ console.log("Office VEO Automation - Loaded into webpage.");
 // ─────────────────────────────────────────────────────
 
 // STEP 1 - Helper functions
-function buildFileName(stt, promptText, ext, autoRename) {
-    const pad = String(stt).padStart(2, '0');
+function buildFileName(stt, promptText, ext, autoRename, outputIndex = 0, totalOutputs = 1) {
     const dotExt = '.' + (ext || 'png');
+    const numPart = String(stt);
+    const suffix = totalOutputs > 1 ? `_${outputIndex + 1}` : '';
 
     if (!autoRename) {
-        return pad + dotExt; // VD: 01.png
+        // Output clean sequential numbers matching prompt number: e.g. 1.png, 2.png, 40.png (or 1_1.png for multi-output)
+        return numPart + suffix + dotExt;
     }
 
     const slug = (promptText || '')
@@ -25,7 +27,7 @@ function buildFileName(stt, promptText, ext, autoRename) {
         .slice(0, 30)                       // limit 30 characters
         .replace(/-$/, '');
 
-    return slug ? (pad + '_' + slug + dotExt) : (pad + dotExt);    // VD: 01_a-cinematic-shot.png
+    return slug ? (numPart + suffix + '_' + slug + dotExt) : (numPart + suffix + dotExt);
 }
 
 
@@ -33,9 +35,10 @@ function getAutoRenameState() {
     return new Promise(resolve => {
         try {
             chrome.storage.local.get(['veo_auto_rename'], result => {
-                resolve(result.veo_auto_rename !== false);
+                // Default to false so downloads use prompt numbers
+                resolve(result.veo_auto_rename === true);
             });
-        } catch (e) { resolve(true); }
+        } catch (e) { resolve(false); }
     });
 }
 
@@ -47,6 +50,7 @@ const runningGroups = new Map();
 let imageAttachmentInProgress = false;  // Lock to serialize image picker operations
 let promptProcessingInProgress = false;  // Lock to prevent next prompt's image selection until current prompt is submitted
 let nativeAutoClickCache = null;
+let _currentSaveToFolder = '';
 
 function getNativeAutoClickState() {
     return new Promise(resolve => {
@@ -99,6 +103,30 @@ async function requestTrustedRightClickAt(x, y) {
     return new Promise(resolve => {
         try {
             chrome.runtime.sendMessage({ action: 'TRUSTED_RIGHT_CLICK_AT', x, y }, (resp) => {
+                resolve({ ok: !!resp?.ok, error: resp?.error || '' });
+            });
+        } catch (e) {
+            resolve({ ok: false, error: String(e?.message || e) });
+        }
+    });
+}
+
+async function requestTrustedInsertText(text) {
+    return new Promise(resolve => {
+        try {
+            chrome.runtime.sendMessage({ action: 'TRUSTED_INSERT_TEXT', text }, (resp) => {
+                resolve({ ok: !!resp?.ok, error: resp?.error || '' });
+            });
+        } catch (e) {
+            resolve({ ok: false, error: String(e?.message || e) });
+        }
+    });
+}
+
+async function requestTrustedKeyEvent(key = 'Enter', code = 'Enter', keyCode = 13) {
+    return new Promise(resolve => {
+        try {
+            chrome.runtime.sendMessage({ action: 'TRUSTED_KEY_EVENT', key, code, keyCode }, (resp) => {
                 resolve({ ok: !!resp?.ok, error: resp?.error || '' });
             });
         } catch (e) {
@@ -322,6 +350,14 @@ async function submitPromptByKeyboardFallback(editor, button = null) {
         await new Promise(r => setTimeout(r, 260));
     }
 
+    try {
+        const trustedRes = await requestTrustedKeyEvent('Enter', 'Enter', 13);
+        if (trustedRes && trustedRes.ok) {
+            dispatched = true;
+            console.log('[submit-debug] sent trusted native Enter via debugger');
+        }
+    } catch (e) { }
+
     return dispatched;
 }
 
@@ -402,149 +438,202 @@ function monitorPopupProgress(groupId, promptIndex) {
 // autoDownloadResult handler:
 // autoDownloadResult implementation:
 
-async function autoDownloadResult(promptNumber, folderName, isVideo = true, selectedQuality = 'none', resultCard = null) {
+async function autoDownloadResult(promptNumber, folderName, isVideo = true, selectedQuality = 'none', resultCard = null, outputIndex = 0, totalOutputs = 1) {
     if (selectedQuality === 'none') return false;
     if (!resultCard) return false;
 
     const autoRename = await getAutoRenameState();
     const promptText = (window._promptRegistry && window._promptRegistry[promptNumber - 1]) || '';
     const ext = isVideo ? 'mp4' : 'png';
-    const newFileName = buildFileName(promptNumber, promptText, ext, autoRename);
+    const newFileName = buildFileName(promptNumber, promptText, ext, autoRename, outputIndex, totalOutputs);
+    const targetFolder = folderName || _currentSaveToFolder || '';
 
-    // Make sure background.js knows the target folder
-    if (folderName) {
-        try {
+    // Make sure background.js knows the target folder and filename queue in advance
+    try {
+        if (targetFolder) {
             await chrome.runtime.sendMessage({
                 action: 'SET_DOWNLOAD_SUBFOLDER',
-                folder: folderName
+                folder: targetFolder
             });
-        } catch (e) { }
-    }
+        }
+        await chrome.runtime.sendMessage({
+            action: 'SET_NEXT_DOWNLOAD_NAMES',
+            fileNames: [newFileName]
+        });
+    } catch (e) { }
 
     try {
-        // Always target the specific resultCard and its media element
-        const clickTarget = resultCard.querySelector('img, video, canvas, a') || resultCard;
-        const rect = clickTarget.getBoundingClientRect();
-        if (rect.width === 0 || rect.height === 0) {
-            console.warn(`[autoDownload] Card #${promptNumber} has 0 dimensions, attempting direct download if image`);
-            if (!isVideo) {
-                const img = resultCard.querySelector('img');
-                if (img && img.src) {
-                    return await triggerDirectDownload(img.src, newFileName, folderName, promptNumber);
-                }
+        // Direct media URL extraction
+        let directUrl = null;
+        if (!isVideo) {
+            const img = resultCard.querySelector('img');
+            if (img && (img.currentSrc || img.src)) {
+                directUrl = img.currentSrc || img.src;
             }
-            return false;
+        } else {
+            const video = resultCard.querySelector('video');
+            if (video && (video.currentSrc || video.src)) {
+                directUrl = video.currentSrc || video.src;
+            }
+            if (!directUrl && video) {
+                const source = video.querySelector('source');
+                if (source && source.src) directUrl = source.src;
+            }
+            if (!directUrl) {
+                const aLink = resultCard.querySelector('a[href*=".mp4"], a[download]');
+                if (aLink && aLink.href) directUrl = aLink.href;
+            }
         }
 
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
+        // For images, direct download from img.src is the most reliable, fast, and lossless method!
+        if (!isVideo && directUrl) {
+            console.log(`[autoDownload] Direct image download for prompt #${promptNumber} (${newFileName})`);
+            const ok = await triggerDirectDownload(directUrl, newFileName, targetFolder, promptNumber);
+            if (ok) return true;
+        }
 
-        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        // Try to trigger download via UI buttons
+        // Hover over card to ensure action buttons are rendered
+        try {
+            resultCard.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true, cancelable: true }));
+            resultCard.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true }));
+        } catch (e) { }
         await new Promise(r => setTimeout(r, 200));
 
-        forceUserLikeClick(clickTarget);
-        await new Promise(r => setTimeout(r, 120));
+        // 1. Look for direct download button on the card
+        let downloadBtn = null;
+        const cardButtons = Array.from(resultCard.querySelectorAll('button, [role="button"], a[download]'))
+            .filter(b => isElementVisible(b));
 
-        const trustedRightClick = await requestTrustedRightClickAt(cx, cy);
-        console.log(`[autoDownload] trusted right click result=${trustedRightClick.ok}${trustedRightClick.error ? ` error=${trustedRightClick.error}` : ''}`);
-        await new Promise(r => setTimeout(r, 450));
+        for (const btn of cardButtons) {
+            const text = (btn.textContent || '').trim().toLowerCase();
+            const aria = (btn.getAttribute('aria-label') || '').toLowerCase();
+            const title = (btn.getAttribute('title') || '').toLowerCase();
+            if (text.includes('download') || aria.includes('download') || title.includes('download') ||
+                text.includes('save') || aria.includes('save') ||
+                text === 'file_download' || text === 'arrow_downward') {
+                downloadBtn = btn;
+                break;
+            }
+        }
 
-        clickTarget.dispatchEvent(new MouseEvent('contextmenu', {
-            bubbles: true, cancelable: true, view: window,
-            button: 2, buttons: 2, clientX: cx, clientY: cy
-        }));
-        await new Promise(r => setTimeout(r, 1000));
+        // 2. Try global download menu button
+        if (!downloadBtn) {
+            downloadBtn = findDownloadMenuButtonV2() || findDownloadMenuButton();
+        }
 
-        // Try to find download button
-        let downloadBtn = findDownloadMenuButtonV2() || findDownloadMenuButton();
+        // 3. Try 3-dots menu on card
+        if (!downloadBtn) {
+            const moreBtn = cardButtons.find(btn => {
+                const text = (btn.textContent || '').trim().toLowerCase();
+                const aria = (btn.getAttribute('aria-label') || '').toLowerCase();
+                return text === 'more_vert' || text === 'more_horiz' || aria.includes('more');
+            });
+            if (moreBtn) {
+                forceUserLikeClick(moreBtn);
+                await new Promise(r => setTimeout(r, 600));
+                downloadBtn = findDownloadMenuButtonV2() || findDownloadMenuButton();
+            }
+        }
 
-        if (!downloadBtn || !isElementVisible(downloadBtn)) {
-            const altXPaths = [
-                '/html/body/div[1]/div[2]/div[2]/div/div[1]/div',
-                '/html/body/div[2]/div[2]/div[2]/div/div[2]/div',
-            ];
-            for (const altXPath of altXPaths) {
-                const alt = getElementByXPath(altXPath);
-                if (alt && isElementVisible(alt)) {
-                    downloadBtn = alt;
-                    break;
-                }
+        // 3b. Check Angular flow-menu-item directly
+        if (!downloadBtn) {
+            const angularDownload = Array.from(document.querySelectorAll('flow-menu-item, [role="menuitem"]'))
+                .find(el => {
+                    const txt = (el.textContent || '').toLowerCase();
+                    const matIcon = el.querySelector('mat-icon');
+                    const iconTxt = (matIcon?.textContent || '').toLowerCase();
+                    return txt.includes('download') || iconTxt.includes('download') || iconTxt.includes('file_download');
+                });
+            if (angularDownload && isElementVisible(angularDownload)) {
+                downloadBtn = angularDownload;
+            }
+        }
+
+        // 4. Try context menu if still not found
+        if (!downloadBtn) {
+            const clickTarget = resultCard.querySelector('img, video, canvas, a') || resultCard;
+            const rect = clickTarget.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                await requestTrustedRightClickAt(cx, cy).catch(() => { });
+                clickTarget.dispatchEvent(new MouseEvent('contextmenu', {
+                    bubbles: true, cancelable: true, view: window,
+                    button: 2, buttons: 2, clientX: cx, clientY: cy
+                }));
+                await new Promise(r => setTimeout(r, 600));
+                downloadBtn = findDownloadMenuButtonV2() || findDownloadMenuButton();
             }
         }
 
         if (downloadBtn && isElementVisible(downloadBtn)) {
-            console.log('[autoDownload] ✓ Download button found, clicking...');
+            console.log(`[autoDownload] ✓ Found download button for prompt #${promptNumber}, clicking...`);
             forceUserLikeClick(downloadBtn);
-            await new Promise(r => setTimeout(r, 1200)); // Wait for quality submenu to appear
+            await new Promise(r => setTimeout(r, 800));
 
-            // Try to find quality button by text or xpath
-            let qualityBtn = null;
-            const targetQualityText = (selectedQuality || '').toLowerCase(); // e.g. "1k", "720p"
-
-            // 1. Search visible buttons by text content
+            // Check if quality submenu appeared
+            const targetQualityText = (selectedQuality || '').toLowerCase();
             const allButtons = Array.from(document.querySelectorAll('button, [role="menuitem"], [role="button"]'))
                 .filter(b => isElementVisible(b));
 
-            for (const btn of allButtons) {
+            let qualityBtn = allButtons.find(btn => {
                 const bText = (btn.textContent || '').trim().toLowerCase();
-                if (bText === targetQualityText || bText.includes(targetQualityText)) {
-                    qualityBtn = btn;
-                    console.log(`[autoDownload] ✓ Found quality button by text '${targetQualityText}'`);
-                    break;
-                }
-            }
+                return bText === targetQualityText || bText.includes(targetQualityText);
+            });
 
-            // 2. Fallback to index-based xpath
             if (!qualityBtn) {
-                const qualityIndexMap = isVideo
-                    ? { '270p': 1, '720p': 2, '720k': 2, '1080p': 3, '1080k': 3, '4k': 4 }
-                    : { '1k': 1, '2k': 2, '4k': 3 };
-                const btnIndex = qualityIndexMap[targetQualityText];
-                if (btnIndex) {
-                    qualityBtn = getElementByXPath(`/html/body/div[3]/div/button[${btnIndex}]`);
-                    if (!qualityBtn || !isElementVisible(qualityBtn)) {
-                        const altQualityXPaths = [
-                            `/html/body/div[1]/div[2]/div[2]/div/div[3]/div/button[${btnIndex}]`,
-                            `/html/body/div[1]/div[2]/div[2]/div/div[2]/div/button[${btnIndex}]`,
-                            `/html/body/div[2]/div[2]/div[2]/div/div[3]/div/button[${btnIndex}]`,
-                        ];
-                        for (const altXPath of altQualityXPaths) {
-                            const alt = getElementByXPath(altXPath);
-                            if (alt && isElementVisible(alt)) {
-                                qualityBtn = alt;
-                                break;
-                            }
-                        }
-                    }
-                }
+                qualityBtn = allButtons.find(btn => {
+                    const span = btn.querySelector('span');
+                    const spanText = (span?.textContent || '').trim().toLowerCase();
+                    return spanText === targetQualityText || spanText.includes(targetQualityText);
+                });
             }
 
             if (qualityBtn && isElementVisible(qualityBtn)) {
-                // Queue the specific filename before clicking download
-                try {
-                    await chrome.runtime.sendMessage({
-                        action: 'SET_NEXT_DOWNLOAD_NAMES',
-                        fileNames: [newFileName]
-                    });
-                } catch (e) { }
-
-                console.log(`[autoDownload] ✓ Clicking quality button for prompt #${promptNumber} (${newFileName})`);
+                console.log(`[autoDownload] ✓ Clicking quality button '${targetQualityText}' for prompt #${promptNumber}`);
                 forceUserLikeClick(qualityBtn);
                 await new Promise(r => setTimeout(r, 600));
                 return true;
             }
+
+            // If no quality button, clicking downloadBtn may have directly triggered the download
+            await new Promise(r => setTimeout(r, 600));
+            return true;
         }
 
-        // Direct image download fallback if context menu didn't work
-        if (!isVideo) {
-            const img = resultCard.querySelector('img');
-            if (img && img.src) {
-                try {
-                    await chrome.runtime.sendMessage({ action: 'POP_FILENAME_QUEUE' });
-                } catch (e) { }
-                console.log(`[autoDownload] Fallback: Direct image download from src for prompt #${promptNumber}`);
-                return await triggerDirectDownload(img.src, newFileName, folderName, promptNumber);
+        // 5. If video and button not found, try clicking card to open player modal and inspect
+        if (isVideo) {
+            const clickTarget = resultCard.querySelector('img, video, canvas, a') || resultCard;
+            forceUserLikeClick(clickTarget);
+            await new Promise(r => setTimeout(r, 800));
+
+            const modalButtons = Array.from(document.querySelectorAll('[role="dialog"] button, [role="dialog"] [role="button"], div[class*="modal"] button, div[class*="player"] button'))
+                .filter(b => isElementVisible(b));
+
+            for (const btn of modalButtons) {
+                const text = (btn.textContent || '').trim().toLowerCase();
+                const aria = (btn.getAttribute('aria-label') || '').toLowerCase();
+                if (text.includes('download') || aria.includes('download') || text === 'file_download' || text === 'arrow_downward') {
+                    forceUserLikeClick(btn);
+                    await new Promise(r => setTimeout(r, 600));
+                    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+                    return true;
+                }
             }
+
+            const modalVideo = document.querySelector('[role="dialog"] video, div[class*="modal"] video');
+            if (modalVideo && (modalVideo.currentSrc || modalVideo.src)) {
+                directUrl = modalVideo.currentSrc || modalVideo.src;
+            }
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+            await new Promise(r => setTimeout(r, 200));
+        }
+
+        // 6. Direct media fallback
+        if (directUrl) {
+            console.log(`[autoDownload] Direct media fallback for prompt #${promptNumber} (${newFileName})`);
+            return await triggerDirectDownload(directUrl, newFileName, targetFolder, promptNumber);
         }
 
         console.warn(`[autoDownload] ✗ Could not download for prompt #${promptNumber}`);
@@ -553,26 +642,35 @@ async function autoDownloadResult(promptNumber, folderName, isVideo = true, sele
     } catch (error) {
         console.error('[autoDownload] Error:', error);
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-        // Direct download fallback on error
-        if (!isVideo && resultCard) {
-            const img = resultCard.querySelector('img');
-            if (img && img.src) {
-                try {
-                    await chrome.runtime.sendMessage({ action: 'POP_FILENAME_QUEUE' });
-                } catch (e) { }
-                return await triggerDirectDownload(img.src, newFileName, folderName, promptNumber);
-            }
+        if (directUrl) {
+            return await triggerDirectDownload(directUrl, newFileName, targetFolder, promptNumber);
         }
         return false;
     }
 }
 
+
 async function triggerDirectDownload(url, filename, folder, promptNumber) {
     try {
+        let downloadUrl = url;
+        if (url && url.startsWith('blob:')) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                downloadUrl = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            } catch (blobErr) {
+                console.warn('[autoDownload] Could not convert blob to data URL:', blobErr);
+            }
+        }
         const resp = await new Promise(resolve => {
             chrome.runtime.sendMessage({
                 action: 'DOWNLOAD_FILE',
-                url: url,
+                url: downloadUrl,
                 filename: filename,
                 folder: folder
             }, resolve);
@@ -1472,8 +1570,14 @@ function getBottomComposerEditor() {
 }
 
 function getBestPromptEditor() {
+    // 1. Direct Angular Flow Rich Text Editor selector
+    const flowEditor = document.querySelector('flow-rich-text-editor div[role="textbox"], flow-rich-text-editor [contenteditable="true"]');
+    if (flowEditor && isElementVisible(flowEditor)) {
+        return flowEditor;
+    }
+
     const allEditors = Array.from(document.querySelectorAll(
-        '[data-slate-editor="true"], [contenteditable="true"], [role="textbox"], textarea, input[type="text"], input:not([type])'
+        'flow-rich-text-editor, [data-slate-editor="true"], [contenteditable="true"], [role="textbox"], textarea, input[type="text"], input:not([type])'
     ))
         .filter(el => isElementVisible(el) && !el.disabled && !el.readOnly)
         .filter(el => {
@@ -1678,6 +1782,12 @@ async function waitForSubmitAcceptance(editor, promptText, beforeErrorCount, bef
 }
 
 function getSubmitButtonNearEditor(editor, mode) {
+    // 1. Direct Angular Flow submit button
+    const angularSubmitBtn = document.querySelector('flow-generate-icon-button button, div.submit-controls button');
+    if (angularSubmitBtn && isElementVisible(angularSubmitBtn) && !angularSubmitBtn.disabled && angularSubmitBtn.getAttribute('aria-disabled') !== 'true') {
+        return angularSubmitBtn;
+    }
+
     const arrowForwardButton = findArrowForwardRunButton(editor);
     if (arrowForwardButton && isElementVisible(arrowForwardButton)) {
         return arrowForwardButton;
@@ -1843,6 +1953,8 @@ function findSubmitButton(editorElement) {
     const root = editorElement ? (editorElement.closest('form, section, main, [role="region"], [class*="panel" i], [class*="composer" i]') || document) : document;
 
     const strictSelectors = [
+        'flow-generate-icon-button button',
+        'div.submit-controls button',
         'button[type="submit"]',
         'button[aria-label*="Send" i]',
         'button[aria-label*="Generate" i]',
@@ -1892,7 +2004,7 @@ async function selectOutputQuantity(count) {
     if (videoOutputButton && isElementVisible(videoOutputButton)) {
         forceUserLikeClick(videoOutputButton);
         await new Promise(r => setTimeout(r, 300));
-        console.log(`-> Da chon Outputs per Prompt theo XPath video: ${targetText}`);
+        console.log(`-> Selected Outputs per Prompt via XPath: ${targetText}`);
         return true;
     }
 
@@ -1955,7 +2067,7 @@ async function selectOutputQuantity(count) {
         if (openedVideoOutputButton && isElementVisible(openedVideoOutputButton)) {
             forceUserLikeClick(openedVideoOutputButton);
             await new Promise(r => setTimeout(r, 300));
-            console.log(`-> Da chon Outputs per Prompt sau khi mo panel: ${targetText}`);
+            console.log(`-> Selected Outputs per Prompt after opening panel: ${targetText}`);
             return true;
         }
         if (await clickOutputTabIfAvailable()) {
@@ -2192,36 +2304,17 @@ async function isSubmitButtonReadyForNextPrompt(editorRef = null, selectedModeRe
     const selectedMode = String(selectedModeRef || '');
     let submitButton = getSubmitButtonNearEditor(editor, selectedMode) || findSubmitButton(editor) || getPrimarySubmitButton();
 
-    // --- WAKE UP SUBMIT BUTTON IF DISABLED ---
-    if (submitButton && (submitButton.disabled || submitButton.getAttribute('aria-disabled') === 'true')) {
-        if (groupIdRef !== undefined && indexRef !== undefined) {
-  safeSendQueueStatus({ groupId: groupIdRef, index: indexRef, status: 'Waking submit button... ⏳', percent: 0 });
-        }
-        try {
-            if (editor) {
-                editor.focus();
-                const currentValue = getEditorText(editor);
-                if (editor.tagName === 'TEXTAREA' || editor.tagName === 'INPUT') {
-                    setNativeInputValue(editor, currentValue + ' ');
-                    editor.dispatchEvent(new Event('input', { bubbles: true }));
-                    editor.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-            }
-            await new Promise(r => setTimeout(r, 600));
-            // Query submit button after wake up
-            submitButton = getSubmitButtonNearEditor(editor, selectedMode) || findSubmitButton(editor) || getPrimarySubmitButton();
-        } catch (e) { }
-    }
+    if (!submitButton) return false;
+    if (!isElementVisible(submitButton)) return false;
 
-    if (!submitButton || submitButton.disabled || submitButton.getAttribute('aria-disabled') === 'true') {
-        if (groupIdRef !== undefined && indexRef !== undefined) {
-            safeSendQueueStatus({ groupId: groupIdRef, index: indexRef, status: 'Submit button not found or locked ❌', percent: 0 });
-        }
+    // Check if submit button is actively busy / generating
+    const text = (submitButton.textContent || '').trim().toLowerCase();
+    const aria = (submitButton.getAttribute('aria-label') || '').toLowerCase();
+    if (text.includes('generating') || text.includes('creating') || text.includes('stop') ||
+        aria.includes('generating') || aria.includes('stop')) {
         return false;
     }
-    if (!isElementVisible(submitButton)) return false;
-    if (submitButton.disabled) return false;
-    if (submitButton.getAttribute('aria-disabled') === 'true') return false;
+
     return true;
 }
 
@@ -2337,7 +2430,7 @@ async function waitForPromptCompletionOrReady(groupId, promptIndex, maxAttempts 
 
             // Return only at 100%
             if (myPercentValue >= 100) {
-                safeSendQueueStatus({ groupId, index: promptIndex, status: 'Xong ✅', percent: 100 });
+                safeSendQueueStatus({ groupId, index: promptIndex, status: 'Done ✅', percent: 100 });
                 return true;
             }
         } else {
@@ -2350,7 +2443,7 @@ async function waitForPromptCompletionOrReady(groupId, promptIndex, maxAttempts 
             // Mark done when render started and settled
             const elapsedMs = Date.now() - startedAt;
             if (seenProgress && seenGridChange && elapsedMs > 30000 && submitReady) {
-                safeSendQueueStatus({ groupId, index: promptIndex, status: 'Xong ✅', percent: 100 });
+                safeSendQueueStatus({ groupId, index: promptIndex, status: 'Done ✅', percent: 100 });
                 return true;
             }
         }
@@ -2432,6 +2525,17 @@ function monitorVideoProgress(promptIndex, promptText, groupId = undefined, sele
             .trim();
         const normalizedTimecodeHint = normalizeTimecodeValue(timecodeHint);
         const getRenderGridContainer = () => {
+            // 1. Direct Angular CDK Virtual Scroll or Tile Container
+            const angularGrid = document.querySelector('cdk-virtual-scroll-viewport div.virtual-item-container, cdk-virtual-scroll-viewport');
+            if (angularGrid && isElementVisible(angularGrid)) {
+                return angularGrid.querySelector('div.virtual-item-container') || angularGrid;
+            }
+
+            const tileContainers = document.querySelectorAll('flow-grid-tile-container');
+            if (tileContainers.length > 0 && tileContainers[0].parentElement) {
+                return tileContainers[0].parentElement;
+            }
+
             for (const xpath of gridContainerXPaths) {
                 const node = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                 if (!node || !isElementVisible(node)) continue;
@@ -2439,7 +2543,7 @@ function monitorVideoProgress(promptIndex, promptText, groupId = undefined, sele
                 if (hasDirectCards) return node;
             }
 
-            const marker = Array.from(document.querySelectorAll('div[data-index][data-item-index]'))
+            const marker = Array.from(document.querySelectorAll('flow-grid-tile-container, div[data-index][data-item-index], [data-tile-id]'))
                 .find(el => isElementVisible(el));
             if (!marker) return null;
 
@@ -2447,7 +2551,7 @@ function monitorVideoProgress(promptIndex, promptText, groupId = undefined, sele
             let current = marker.parentElement;
             while (current && current !== document.body) {
                 const visibleChildren = Array.from(current.children || []).filter(child => isElementVisible(child));
-                const dataIndexChildren = visibleChildren.filter(child => child.hasAttribute('data-index') || child.hasAttribute('data-item-index'));
+                const dataIndexChildren = visibleChildren.filter(child => child.hasAttribute('data-index') || child.hasAttribute('data-item-index') || child.tagName.toLowerCase() === 'flow-grid-tile-container');
                 if (dataIndexChildren.length >= 2) return current;
                 current = current.parentElement;
             }
@@ -2505,6 +2609,18 @@ function monitorVideoProgress(promptIndex, promptText, groupId = undefined, sele
 
         const readPercentFromCard = (card) => {
             if (!card || !isElementVisible(card)) return null;
+
+            // Check Angular flow-pending-tile directly
+            const pendingTile = card.querySelector('flow-pending-tile');
+            if (pendingTile) {
+                const pText = (pendingTile.textContent || '').trim();
+                const pMatch = pText.match(/(\d{1,3})%/);
+                if (pMatch) {
+                    const parsed = parseInt(pMatch[1], 10);
+                    if (Number.isFinite(parsed)) return parsed;
+                }
+            }
+
             const allTexts = Array.from(card.querySelectorAll('*'));
             const percentEl = allTexts.find(el => {
                 const text = (el.textContent || '').trim();
@@ -2531,13 +2647,18 @@ function monitorVideoProgress(promptIndex, promptText, groupId = undefined, sele
 
         const isCardLikelyCompleted = (card) => {
             if (!card || !isElementVisible(card)) return false;
+            // 1. If flow-pending-tile exists, the card is generating
+            if (card.querySelector('flow-pending-tile')) return false;
             if (readPercentFromCard(card) !== null) return false;
 
-            const hasMedia = !!card.querySelector('img, video, canvas');
-            const hasAction = !!card.querySelector('button, [role="button"], a[href], i.google-symbols');
+            const img = card.querySelector('img');
+            const video = card.querySelector('video');
+            const hasReadyImg = !!(img && (img.currentSrc || img.src) && (img.complete || img.naturalWidth > 0));
+            const hasReadyVideo = !!(video && (video.currentSrc || video.src));
+            const hasMedia = hasReadyImg || hasReadyVideo || !!card.querySelector('canvas');
             const stillRunning = isFlowPendingText(card.textContent || '');
 
-            return hasMedia && hasAction && !stillRunning;
+            return hasMedia && !stillRunning;
         };
 
         const getCardIdentity = (card) => {
@@ -2699,7 +2820,7 @@ function monitorVideoProgress(promptIndex, promptText, groupId = undefined, sele
                 });
 
                 if (myPercentValue >= 100) {
-                    safeSendMessage({ action: "UPDATE_QUEUE_STATUS", groupId, index: promptIndex, status: "Xong ✅", percent: 100 });
+                    safeSendMessage({ action: "UPDATE_QUEUE_STATUS", groupId, index: promptIndex, status: "Done ✅", percent: 100 });
                     createOrUpdateProgressBar(100);
                     if (!deferDownload) {
                         // Trigger auto-download before finalizing (default behavior)
@@ -2767,7 +2888,48 @@ function monitorVideoProgress(promptIndex, promptText, groupId = undefined, sele
                 }
 
             } else {
-                // Not seen percent yet -> preparing or starting
+                // Not seen percent yet -> check if new cards generated by this prompt are already finished (e.g. image mode or fast video)
+                const snapshotKey = `${String(groupId)}:${promptIndex}:snapshot`;
+                const tileSnapshots = monitorVideoProgress._tileSnapshot || new Map();
+                const beforeSnapshot = tileSnapshots.get(snapshotKey) instanceof Set
+                    ? tileSnapshots.get(snapshotKey)
+                    : new Set();
+
+                const allVisibleCards = Array.from(document.querySelectorAll('flow-grid-tile-container, [data-tile-id]'))
+                    .filter(el => isElementVisible(el));
+
+                const newCardsForPrompt = allVisibleCards.filter(card => {
+                    const id = card.getAttribute('data-tile-id') || card.getAttribute('data-index') || card.id;
+                    return id && !beforeSnapshot.has(id);
+                });
+
+                const completedCards = newCardsForPrompt.filter(card => isCardLikelyCompleted(card));
+                const targetOutputCount = _currentOutputCount || 1;
+
+                if (newCardsForPrompt.length >= targetOutputCount &&
+                    newCardsForPrompt.every(c => isCardLikelyCompleted(c) || isCardError(c))) {
+                    const errCount = newCardsForPrompt.filter(isCardError).length;
+                    if (errCount === newCardsForPrompt.length && newCardsForPrompt.length > 0) {
+                        markPromptRenderFailure(groupId, promptIndex);
+                        safeSendMessage({ action: "UPDATE_QUEUE_STATUS", groupId, index: promptIndex, status: "Flow reported error, will retry...", percent: 0 });
+                        finalize(false);
+                        return;
+                    }
+
+                    console.log(`[monitorVideoProgress] ✓ Prompt #${promptIndex + 1} completed (${completedCards.length} ready)!`);
+                    safeSendMessage({ action: "UPDATE_QUEUE_STATUS", groupId, index: promptIndex, status: "Done ✅", percent: 100 });
+                    createOrUpdateProgressBar(100);
+                    if (!deferDownload) {
+                        const downloadOk = await handlePromptCompletionDownload(promptIndex, groupId, selectedMode);
+                        if (downloadOk === false) {
+                            finalize(false);
+                            return;
+                        }
+                    }
+                    finalize(true);
+                    return;
+                }
+
                 const elapsedSinceStart = Date.now() - lastPercentChangedAt;
                 const submitReady = await isSubmitButtonReadyForNextPrompt(null, selectedMode, groupId, promptIndex);
 
@@ -2778,7 +2940,6 @@ function monitorVideoProgress(promptIndex, promptText, groupId = undefined, sele
                     safeSendMessage({ action: "UPDATE_QUEUE_STATUS", groupId, index: promptIndex, status: "Done ✅", percent: 100 });
                     createOrUpdateProgressBar(100);
                     if (!deferDownload) {
-                        // Trigger auto-download before finalizing (default behavior)
                         const downloadOk = await handlePromptCompletionDownload(promptIndex, groupId, selectedMode);
                         if (downloadOk === false) {
                             finalize(false);
@@ -2803,12 +2964,11 @@ function monitorVideoProgress(promptIndex, promptText, groupId = undefined, sele
                         status: multiMonitor ? "Mapping render card... ⏳" : "Rendering... ⏳",
                         percent: 1
                     });
-                } else if (submitReady && elapsedSinceStart >= 10000) {
-                    // No pending cards + submit ready + waited 10s = done
+                } else if (submitReady && elapsedSinceStart >= 6000) {
+                    // No pending cards + submit ready + waited 6s = done
                     safeSendMessage({ action: "UPDATE_QUEUE_STATUS", groupId, index: promptIndex, status: "Done ✅", percent: 100 });
                     createOrUpdateProgressBar(100);
                     if (!deferDownload) {
-                        // Trigger auto-download before finalizing (default behavior)
                         const downloadOk = await handlePromptCompletionDownload(promptIndex, groupId, selectedMode);
                         if (downloadOk === false) {
                             finalize(false);
@@ -2817,7 +2977,7 @@ function monitorVideoProgress(promptIndex, promptText, groupId = undefined, sele
                     }
                     finalize(true);
                 } else {
-                    safeSendMessage({ action: "UPDATE_QUEUE_STATUS", groupId, index: promptIndex, status: "Preparing... ⚙️" });
+                    safeSendMessage({ action: "UPDATE_QUEUE_STATUS", groupId, index: promptIndex, status: "Rendering... ⏳" });
                 }
             }
 
@@ -4769,7 +4929,7 @@ async function handlePromptCompletionDownload(promptIndex, groupId, selectedMode
         for (let i = 0; i < successfulCards.length; i++) {
             const tileId = successfulCards[i].getAttribute('data-tile-id') || '';
             const ok = await autoDownloadResult(
-                promptIndex + 1, folderName, !isImgMode, selectedQuality, successfulCards[i]
+                promptIndex + 1, folderName, !isImgMode, selectedQuality, successfulCards[i], i, successfulCards.length
             );
             if (ok) {
                 downloadCount++;
@@ -4808,9 +4968,9 @@ function getDownloadSettings(currentMode = '') {
                 const videoQuality = settings['auto-download-video-quality'] || '720p';
                 const imageQuality = settings['auto-download-image-quality'] || '1k';
 
-                let folderName = '';
+                let folderName = _currentSaveToFolder || '';
                 const safeMode = String(currentMode || '').toLowerCase().trim();
-                if (safeMode) {
+                if (!folderName && safeMode) {
                     const key = `save-to-folder-${safeMode}`;
                     if (settings[key]) {
                         folderName = settings[key];
@@ -4837,7 +4997,7 @@ function getDownloadSettings(currentMode = '') {
             });
         } catch (e) {
             console.log(`[getDownloadSettings] Error:`, e);
-            resolve({ videoQuality: '720p', imageQuality: '1k', folderName: 'veo-folder-1' });
+            resolve({ videoQuality: '720p', imageQuality: '1k', folderName: _currentSaveToFolder || 'veo-folder-1' });
         }
     });
 }
@@ -4895,6 +5055,7 @@ async function runAutomation(request) {
         uploadedFiles = [],
         promptImagePlan = [],
         maxInputImagesPerPrompt = 3,
+        saveToFolder = '',
         masterPrompt = ''
     } = request || {};
 
@@ -4923,6 +5084,16 @@ async function runAutomation(request) {
     runningGroups.set(groupKey, controller);
 
     try {
+        if (saveToFolder && String(saveToFolder).trim()) {
+            _currentSaveToFolder = String(saveToFolder).trim();
+            try {
+                chrome.runtime.sendMessage({
+                    action: 'SET_DOWNLOAD_SUBFOLDER',
+                    folder: _currentSaveToFolder
+                }).catch(() => {});
+            } catch (e) {}
+        }
+
         clearRenderCardOwners();
         _downloadDone.clear();
         _downloadedTileIds.clear();
@@ -5071,6 +5242,19 @@ async function runAutomation(request) {
                     safeSendQueueStatus({ groupId, index, status: 'Run button not found ❌', percent: 0 });
                     return;
                 }
+
+                // CRITICAL: Capture existing tile IDs BEFORE submit.
+                // Doing this before submission guarantees that newly rendered tiles from this prompt
+                // are NOT in this snapshot, so monitorVideoProgress and handlePromptCompletionDownload
+                // will cleanly identify the new cards and never pick older cards from previous prompts.
+                const snapshotKey = `${String(groupId)}:${index}:snapshot`;
+                const existingTileIds = new Set(
+                    Array.from(document.querySelectorAll('flow-grid-tile-container, [data-tile-id]'))
+                        .map(el => el.getAttribute('data-tile-id') || el.getAttribute('data-index') || el.id)
+                        .filter(Boolean)
+                );
+                monitorVideoProgress._tileSnapshot = monitorVideoProgress._tileSnapshot || new Map();
+                monitorVideoProgress._tileSnapshot.set(snapshotKey, existingTileIds);
 
                 let submitted = false;
                 let activeEditor = editor;
@@ -5310,15 +5494,6 @@ async function runAutomation(request) {
 
                 promptProcessingInProgress = false;
                 safeSendQueueStatus({ groupId, index, status: 'Rendering… ⏳', percent: 1 });
-
-                const snapshotKey = `${String(groupId)}:${index}:snapshot`;
-                const existingTileIds = new Set(
-                    Array.from(document.querySelectorAll('[data-tile-id]'))
-                        .map(el => el.getAttribute('data-tile-id'))
-                        .filter(Boolean)
-                );
-                monitorVideoProgress._tileSnapshot = monitorVideoProgress._tileSnapshot || new Map();
-                monitorVideoProgress._tileSnapshot.set(snapshotKey, existingTileIds);
 
                 if (!waitForCompletion) {
                     monitorVideoProgress(index, promptText, groupId, selectedMode, deferDownload, failureIdsBeforeSubmit).catch(() => { });

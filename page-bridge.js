@@ -224,4 +224,44 @@
     ROOT.setAttribute('data-veo-run-result-clicked', result.clicked ? '1' : '0');
     document.dispatchEvent(new Event(RESULT_EVENT));
   });
+
+  // Programmatic file upload interception
+  let pendingFileInput = null;
+  const originalInputClick = HTMLInputElement.prototype.click;
+  HTMLInputElement.prototype.click = function (...args) {
+    if (this.type === 'file' && document.documentElement.getAttribute('data-veo-active') === 'true') {
+      pendingFileInput = this;
+      return;
+    }
+    return originalInputClick.apply(this, args);
+  };
+
+  document.addEventListener('VEO_UPLOAD_FILE_DATA', (event) => {
+    const data = event.detail;
+    if (!data || !pendingFileInput) return;
+    try {
+      const { base64, filename, mimeType } = data;
+      let rawBase64 = base64 || '';
+      if (rawBase64.includes(',')) {
+        rawBase64 = rawBase64.split(',')[1];
+      }
+      const binaryStr = atob(rawBase64);
+      const byteNumbers = new Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) {
+        byteNumbers[i] = binaryStr.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: mimeType || 'image/png' });
+      const file = new File([blob], filename || 'uploaded_image.png', { type: mimeType || 'image/png' });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      pendingFileInput.files = dataTransfer.files;
+      pendingFileInput.dispatchEvent(new Event('change', { bubbles: true }));
+      pendingFileInput.dispatchEvent(new Event('input', { bubbles: true }));
+    } catch (err) {
+      console.warn('[veo-page-bridge] Error setting file data:', err);
+    } finally {
+      pendingFileInput = null;
+    }
+  });
 })();

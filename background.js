@@ -20,6 +20,10 @@ const fileNameQueues = new Map(); // tabId -> string[]
 let globalFileNameQueue = [];
 let lastActiveTabId = null;
 
+// Direct download paths tracking
+const directDownloadPathsByUrl = new Map();
+const directDownloadPathsById = new Map();
+
 function sanitizePathSegment(input) {
   return String(input || '')
     .replace(/[\\/:*?"<>|]/g, '_')
@@ -141,6 +145,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const folder = sanitizeSubfolderPath(request.folder || currentDownloadSubfolder || '');
     const suggestedPath = folder ? `${folder}/${rawFileName}` : rawFileName;
 
+    if (request.url) {
+      directDownloadPathsByUrl.set(request.url, suggestedPath);
+    }
+
     chrome.downloads.download({
       url: request.url,
       filename: suggestedPath,
@@ -148,9 +156,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       saveAs: false
     }, (downloadId) => {
       if (chrome.runtime.lastError) {
+        if (request.url) directDownloadPathsByUrl.delete(request.url);
         console.warn('[DOWNLOAD_FILE] Error:', chrome.runtime.lastError);
         sendResponse?.({ ok: false, error: chrome.runtime.lastError.message });
       } else {
+        if (downloadId) directDownloadPathsById.set(downloadId, suggestedPath);
         sendResponse?.({ ok: true, downloadId });
       }
     });
@@ -210,9 +220,105 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
+  if (request.action === 'TRUSTED_INSERT_TEXT') {
+    const tabId = request.tabId || sender?.tab?.id;
+    const text = String(request.text || '');
+
+    if (!tabId || !text) {
+      sendResponse?.({ ok: false, error: 'Invalid insert text payload' });
+      return;
+    }
+
+    const runInsertText = async () => {
+      if (!await hasDebuggerPermission() || !chrome.debugger) {
+        sendResponse?.({ ok: false, error: 'Debugger not available' });
+        return;
+      }
+      const target = { tabId };
+      try {
+        await chrome.debugger.attach(target, '1.3');
+        await chrome.debugger.sendCommand(target, 'Input.insertText', { text });
+        await chrome.debugger.detach(target);
+        sendResponse?.({ ok: true });
+      } catch (error) {
+        try { await chrome.debugger.detach(target); } catch (e) { }
+        sendResponse?.({ ok: false, error: String(error?.message || error) });
+      }
+    };
+
+    runInsertText();
+    return true;
+  }
+
+  if (request.action === 'TRUSTED_KEY_EVENT') {
+    const tabId = request.tabId || sender?.tab?.id;
+    const key = request.key || 'Enter';
+    const code = request.code || 'Enter';
+    const keyCode = request.keyCode || 13;
+
+    if (!tabId) {
+      sendResponse?.({ ok: false, error: 'No tabId for key event' });
+      return;
+    }
+
+    const runKeyEvent = async () => {
+      if (!await hasDebuggerPermission() || !chrome.debugger) {
+        sendResponse?.({ ok: false, error: 'Debugger not available' });
+        return;
+      }
+      const target = { tabId };
+      try {
+        await chrome.debugger.attach(target, '1.3');
+        await chrome.debugger.sendCommand(target, 'Input.dispatchKeyEvent', {
+          type: 'rawKeyDown',
+          key,
+          code,
+          windowsVirtualKeyCode: keyCode,
+          nativeVirtualKeyCode: keyCode
+        });
+        await chrome.debugger.sendCommand(target, 'Input.dispatchKeyEvent', {
+          type: 'keyUp',
+          key,
+          code,
+          windowsVirtualKeyCode: keyCode,
+          nativeVirtualKeyCode: keyCode
+        });
+        await chrome.debugger.detach(target);
+        sendResponse?.({ ok: true });
+      } catch (error) {
+        try { await chrome.debugger.detach(target); } catch (e) { }
+        sendResponse?.({ ok: false, error: String(error?.message || error) });
+      }
+    };
+
+    runKeyEvent();
+    return true;
+  }
+
 });
 
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
+  // Check if this download was initiated directly by DOWNLOAD_FILE
+  let customDirectPath = null;
+  if (item && item.id && directDownloadPathsById.has(item.id)) {
+    customDirectPath = directDownloadPathsById.get(item.id);
+    directDownloadPathsById.delete(item.id);
+  } else if (item && item.url && directDownloadPathsByUrl.has(item.url)) {
+    customDirectPath = directDownloadPathsByUrl.get(item.url);
+    directDownloadPathsByUrl.delete(item.url);
+  }
+
+  if (customDirectPath) {
+    const currentName = item?.filename || '';
+    const origExtMatch = currentName.match(/\.([^.]+)$/);
+    const origExt = origExtMatch ? origExtMatch[1] : '';
+    if (origExt && !customDirectPath.endsWith('.' + origExt)) {
+      customDirectPath = customDirectPath.replace(/\.[^.]+$/, '') + '.' + origExt;
+    }
+    suggest({ filename: customDirectPath, conflictAction: 'uniquify' });
+    return;
+  }
+
   const isFlowDownload = shouldHandleDownload(item?.url, item?.referrer);
 
   if (!isFlowDownload) {

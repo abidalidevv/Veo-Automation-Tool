@@ -276,7 +276,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveFolderInputs = document.querySelectorAll('[id^="save-to-folder-"]');
   saveFolderInputs.forEach(input => {
     input.addEventListener('input', () => {
-      chrome.storage.local.set({ [input.id]: input.value });
+      const folder = String(input.value || '').trim();
+      chrome.storage.local.set({
+        [input.id]: input.value,
+        veo_download_subfolder: folder
+      });
+      chrome.runtime.sendMessage({
+        action: 'SET_DOWNLOAD_SUBFOLDER',
+        folder: folder
+      }).catch(() => { });
     });
   });
   chrome.storage.local.get(null, (allData) => {
@@ -289,17 +297,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const autoRenameToggle = document.querySelector('.toggle-row input[type="checkbox"]');
-  if (autoRenameToggle) {
-    chrome.storage.local.get(['veo_auto_rename'], result => {
-      if (result.veo_auto_rename !== undefined) {
-        autoRenameToggle.checked = result.veo_auto_rename;
-      }
+  // Auto-rename toggles (sync across all mode sections; default false for numbered files)
+  const autoRenameToggles = document.querySelectorAll('.auto-rename-card input[type="checkbox"], .auto-rename-toggle');
+  chrome.storage.local.get(['veo_auto_rename'], result => {
+    const isAutoRename = result.veo_auto_rename === true;
+    autoRenameToggles.forEach(toggle => {
+      toggle.checked = isAutoRename;
     });
-    autoRenameToggle.addEventListener('change', () => {
-      chrome.storage.local.set({ veo_auto_rename: autoRenameToggle.checked });
+  });
+
+  autoRenameToggles.forEach(toggle => {
+    toggle.addEventListener('change', () => {
+      const newState = toggle.checked;
+      chrome.storage.local.set({ veo_auto_rename: newState });
+      autoRenameToggles.forEach(other => {
+        other.checked = newState;
+      });
     });
-  }
+  });
 
   // Auto-save and restore Master Prompt inputs
   const masterPromptInputs = document.querySelectorAll('.master-prompt-input');
